@@ -206,11 +206,19 @@ function toDetail(m: RawMovie): MovieDetail {
 // Mock helpers (used when no credentials are configured)
 // ---------------------------------------------------------------------------
 
-function mockDiscover(genreIds: number[], page: number): Paginated<MovieSummary> {
+function mockDiscover(
+  genreIds: number[],
+  page: number,
+  sort?: SortOption,
+): Paginated<MovieSummary> {
   const filtered = genreIds.length
     ? MOCK_MOVIES.filter((m) => genreIds.every((id) => m.genreIds.includes(id)))
     : MOCK_MOVIES;
-  const sorted = [...filtered].sort((a, b) => b.rating - a.rating);
+  const sorted = [...filtered].sort((a, b) =>
+    sort === "vote_average.desc"
+      ? b.rating - a.rating
+      : b.voteCount - a.voteCount,
+  );
   const totalPages = 1;
   return {
     results: sorted.map((m) => ({
@@ -257,7 +265,7 @@ export async function discoverMovies(opts: {
   const { genreIds = [], page = 1, sort = "popularity.desc" } = opts;
   const safePage = Math.min(Math.max(Math.trunc(page) || 1, 1), 500);
 
-  if (!isLiveData) return mockDiscover(genreIds, safePage);
+  if (!isLiveData) return mockDiscover(genreIds, safePage, sort);
 
   try {
     const data = await tmdbFetch<RawPaginated>("/discover/movie", {
@@ -278,7 +286,7 @@ export async function discoverMovies(opts: {
     };
   } catch {
     // Degrade gracefully rather than throwing the whole page into the error UI.
-    return mockDiscover(genreIds, safePage);
+    return mockDiscover(genreIds, safePage, sort);
   }
 }
 

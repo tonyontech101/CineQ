@@ -45,3 +45,6 @@ Thumbs.db
 # package manager locks (keep only one)
 yarn.lock
 pnpm-lock.yaml
+
+#agent
+.opencode
