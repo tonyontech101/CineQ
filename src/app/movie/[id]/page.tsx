@@ -7,6 +7,7 @@ import {
   getRelatedMovies,
 } from "@/lib/tmdb";
 import { DetailHero } from "@/components/DetailHero";
+import { DisclosureProvider, DetailsPanel } from "@/components/DetailsDisclosure";
 import { MovieGrid } from "@/components/MovieGrid";
 import { CastGrid } from "@/components/CastGrid";
 import { TrailerPlayer } from "@/components/TrailerPlayer";
@@ -94,56 +95,65 @@ export default async function MoviePage({
         </Link>
       </div>
 
-      <DetailHero movie={movie} />
+      <DisclosureProvider>
+        <DetailHero movie={movie} />
 
-      <div className="mx-auto mt-12 flex max-w-shell flex-col gap-14 px-4 sm:px-6 lg:px-8">
-        {/* Trailer */}
-        {movie.trailerKey && (
-          <Section title="Trailer">
-            <div className="max-w-3xl">
-              <TrailerPlayer youtubeKey={movie.trailerKey} title={movie.title} />
-            </div>
-          </Section>
-        )}
+        <DetailsPanel>
+          <div className="mx-auto mt-12 flex max-w-shell flex-col gap-14 px-4 sm:px-6 lg:px-8">
+            {/* Trailer */}
+            {movie.trailerKey && (
+              <Section title="Trailer">
+                <div className="max-w-3xl">
+                  <TrailerPlayer youtubeKey={movie.trailerKey} title={movie.title} />
+                </div>
+              </Section>
+            )}
 
-        {/* Facts */}
-        <Section title="Details">
-          <dl className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-            {facts.map((f) => (
-              <div key={f.label} className="border-b border-ink-600 pb-3">
-                <dt className="text-xs uppercase tracking-wide text-paper-faint">
-                  {f.label}
-                </dt>
-                <dd className="mt-1 text-sm font-medium text-paper">{f.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </Section>
+            {/* Facts */}
+            <Section title="Details">
+              <dl className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+                {facts.map((f) => (
+                  <div key={f.label} className="border-b border-ink-600 pb-3">
+                    <dt className="text-xs uppercase tracking-wide text-paper-faint">
+                      {f.label}
+                    </dt>
+                    <dd className="mt-1 text-sm font-medium text-paper">{f.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </Section>
 
-        {/* Cast */}
-        {movie.cast.length > 0 && (
-          <Section title="Cast">
-            <CastGrid cast={movie.cast} />
-          </Section>
-        )}
+            {/* Cast */}
+            {movie.cast.length > 0 && (
+              <Section title="Cast">
+                <CastGrid cast={movie.cast} />
+              </Section>
+            )}
 
-        {/* Prequels / sequels */}
-        {franchiseParts.length > 0 && (
+            {/* Prequels / sequels */}
+            {franchiseParts.length > 0 && (
+              <Section
+                title={collection ? `Part of the ${collection.name}` : "Related films"}
+                subtitle="Prequels, sequels and other films in this franchise."
+              >
+                <MovieGrid movies={franchiseParts} />
+              </Section>
+            )}
+          </div>
+        </DetailsPanel>
+      </DisclosureProvider>
+
+      {/* Recommendations — always visible when you open a movie */}
+      {related.length > 0 && (
+        <div className="mx-auto mt-12 max-w-shell px-4 sm:px-6 lg:px-8">
           <Section
-            title={collection ? `Part of the ${collection.name}` : "Related films"}
-            subtitle="Prequels, sequels and other films in this franchise."
+            title="Recommended for you"
+            subtitle="Because you're looking at this title."
           >
-            <MovieGrid movies={franchiseParts} />
-          </Section>
-        )}
-
-        {/* Recommendations */}
-        {related.length > 0 && (
-          <Section title="You might also like">
             <MovieGrid movies={related} />
           </Section>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
