@@ -164,9 +164,9 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: "Trending",
-    href: "/movies",
+    href: "/trending",
     icon: <IconTrending />,
-    isActive: () => false,
+    isActive: (p) => p.startsWith("/trending"),
   },
   {
     label: "Movies",

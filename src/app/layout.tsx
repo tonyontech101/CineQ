@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SidebarProvider, Sidebar, ContentArea } from "@/components/Sidebar";
+import { ChatWidget } from "@/components/ChatWidget";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -49,6 +50,7 @@ export default function RootLayout({
             <Footer />
           </ContentArea>
         </SidebarProvider>
+        <ChatWidget />
       </body>
     </html>
   );

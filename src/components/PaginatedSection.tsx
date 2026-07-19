@@ -9,6 +9,12 @@ interface Props {
   sort: "popularity.desc" | "vote_average.desc";
   initialData: Paginated<MovieSummary>;
   genreIds?: number[];
+  year?: number;
+  country?: string;
+  /** API endpoint used to load more pages. */
+  apiPath?: string;
+  /** Link base for cards ("/movie" or "/tv"). */
+  basePath?: string;
 }
 
 export function PaginatedSection({
@@ -16,6 +22,10 @@ export function PaginatedSection({
   sort,
   initialData,
   genreIds,
+  year,
+  country,
+  apiPath = "/api/movies",
+  basePath = "/movie",
 }: Props) {
   const [page, setPage] = useState(initialData.page);
   const [data, setData] = useState(initialData);
@@ -31,11 +41,17 @@ export function PaginatedSection({
       setLoading(true);
       setError(null);
       try {
-        const url = new URL("/api/movies", window.location.origin);
+        const url = new URL(apiPath, window.location.origin);
         url.searchParams.set("sort", sort);
         url.searchParams.set("page", String(nextPage));
         if (genreIds?.length) {
           url.searchParams.set("genreIds", genreIds.join(","));
+        }
+        if (year) {
+          url.searchParams.set("year", String(year));
+        }
+        if (country) {
+          url.searchParams.set("country", country);
         }
         const res = await fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -48,7 +64,7 @@ export function PaginatedSection({
         setLoading(false);
       }
     },
-    [sort, data.totalPages, loading, genreIds],
+    [sort, data.totalPages, loading, genreIds, year, country, apiPath],
   );
 
   return (
@@ -114,7 +130,7 @@ export function PaginatedSection({
       {loading ? (
         <MovieGridSkeleton count={12} />
       ) : (
-        <MovieGrid movies={data.results.slice(0, 12)} />
+        <MovieGrid movies={data.results.slice(0, 12)} basePath={basePath} />
       )}
     </section>
   );

@@ -1,5 +1,4 @@
 import type { CastMember, Genre, MovieDetail } from "./types";
-
 // Bundled fallback data so the app runs with zero configuration (no TMDB key).
 // Posters are intentionally null here; the UI renders an on-brand placeholder.
 // Real deployments set TMDB_API_KEY and get live posters + a full catalog.
@@ -96,4 +95,79 @@ export const MOCK_MOVIES: MovieDetail[] = RAW.map((r) => ({
   directors: [DIRECTORS[r.id % DIRECTORS.length]],
   trailerKey: r.id % 2 === 0 ? DEMO_TRAILER_KEY : null,
   collection: null,
+}));
+
+
+// ---------------------------------------------------------------------------
+// TV shows (demo fallback)
+// ---------------------------------------------------------------------------
+
+// TMDB uses a distinct genre set for TV. This is a representative subset.
+export const MOCK_TV_GENRES: Genre[] = [
+  { id: 10759, name: "Action & Adventure" },
+  { id: 16, name: "Animation" },
+  { id: 35, name: "Comedy" },
+  { id: 80, name: "Crime" },
+  { id: 18, name: "Drama" },
+  { id: 9648, name: "Mystery" },
+  { id: 10765, name: "Sci-Fi & Fantasy" },
+  { id: 10768, name: "War & Politics" },
+];
+
+function tvGenresFor(ids: number[]): Genre[] {
+  return MOCK_TV_GENRES.filter((g) => ids.includes(g.id));
+}
+
+interface RawMockTv {
+  id: number;
+  name: string;
+  overview: string;
+  rating: number;
+  voteCount: number;
+  firstAirDate: string;
+  episodeRuntime: number;
+  seasons: number;
+  episodes: number;
+  tagline: string;
+  genreIds: number[];
+}
+
+const RAW_TV: RawMockTv[] = [
+  { id: 101, name: "Signal Fade", overview: "A small-town dispatcher realizes the emergency calls she answers are arriving from a night that hasn't happened yet.", rating: 8.5, voteCount: 4120, firstAirDate: "2023-09-14", episodeRuntime: 52, seasons: 2, episodes: 16, tagline: "Every call is a warning.", genreIds: [9648, 18, 10765] },
+  { id: 102, name: "The Long Table", overview: "Three generations of a restaurant family fight, cook, and reconcile across the seasons of a single tumultuous year.", rating: 8.0, voteCount: 2210, firstAirDate: "2022-01-30", episodeRuntime: 47, seasons: 3, episodes: 30, tagline: "Family is served daily.", genreIds: [18, 35] },
+  { id: 103, name: "Precinct 9", overview: "An idealistic rookie and a jaded veteran work the graveyard shift in a city that never quite sleeps — or forgives.", rating: 7.6, voteCount: 3050, firstAirDate: "2021-04-11", episodeRuntime: 43, seasons: 4, episodes: 48, tagline: "The night shift never ends.", genreIds: [80, 18, 10759] },
+  { id: 104, name: "Orbital", overview: "The crew of a struggling space station discovers a stowaway who claims the mission was never meant to come home.", rating: 8.2, voteCount: 3670, firstAirDate: "2024-02-02", episodeRuntime: 55, seasons: 1, episodes: 10, tagline: "No one is coming back.", genreIds: [10765, 9648] },
+  { id: 105, name: "Bramblewick", overview: "In a village where the forest keeps score, a new schoolteacher uncovers a centuries-old bargain nobody wants remembered.", rating: 7.9, voteCount: 1780, firstAirDate: "2020-10-23", episodeRuntime: 50, seasons: 2, episodes: 18, tagline: "The woods remember.", genreIds: [10765, 9648, 18] },
+  { id: 106, name: "Open Mic", overview: "A washed-up comedian mentors a fearless newcomer as they claw their way through the brutal world of stand-up.", rating: 7.4, voteCount: 990, firstAirDate: "2023-06-06", episodeRuntime: 30, seasons: 2, episodes: 20, tagline: "Dying is easy. Comedy is hard.", genreIds: [35, 18] },
+  { id: 107, name: "The Cartographer", overview: "A reclusive mapmaker is pulled into a shadow war when his charts begin predicting political assassinations.", rating: 8.1, voteCount: 2540, firstAirDate: "2022-08-19", episodeRuntime: 58, seasons: 3, episodes: 24, tagline: "Every border has a body.", genreIds: [10768, 18, 9648] },
+  { id: 108, name: "Paper Planes", overview: "Two estranged siblings inherit their late father's tiny airline and must keep it flying — and themselves talking.", rating: 7.7, voteCount: 1360, firstAirDate: "2021-11-05", episodeRuntime: 45, seasons: 2, episodes: 22, tagline: "Some things stay grounded.", genreIds: [18, 35, 10759] },
+];
+
+const TV_CREATORS = [
+  "Rowan Fielding", "Mira Castellanos", "Jonah Pryce",
+  "Selin Aydin", "Theo Nakamura", "Bianca Rossi",
+];
+
+export const MOCK_TV: MovieDetail[] = RAW_TV.map((r) => ({
+  id: r.id,
+  title: r.name,
+  overview: r.overview,
+  posterUrl: null,
+  backdropUrl: null,
+  rating: r.rating,
+  voteCount: r.voteCount,
+  releaseYear: r.firstAirDate.slice(0, 4),
+  releaseDate: r.firstAirDate,
+  genreIds: r.genreIds,
+  genres: tvGenresFor(r.genreIds),
+  tagline: r.tagline,
+  runtime: r.episodeRuntime,
+  originalLanguage: "en",
+  status: "Returning Series",
+  cast: mockCast(r.id),
+  directors: [TV_CREATORS[r.id % TV_CREATORS.length]],
+  trailerKey: r.id % 2 === 0 ? DEMO_TRAILER_KEY : null,
+  collection: null,
+  numberOfSeasons: r.seasons,
+  numberOfEpisodes: r.episodes,
 }));

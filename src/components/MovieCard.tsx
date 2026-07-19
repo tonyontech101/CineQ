@@ -8,13 +8,15 @@ import { SaveIconButton } from "./SaveButton";
 export function MovieCard({
   movie,
   priority = false,
+  basePath = "/movie",
 }: {
   movie: MovieSummary;
   priority?: boolean;
+  basePath?: string;
 }) {
   return (
     <Link
-      href={`/movie/${movie.id}`}
+      href={`${basePath}/${movie.id}`}
       className="group flex flex-col overflow-hidden rounded-card border border-ink-600 bg-ink-800 transition-all duration-200 hover:-translate-y-1 hover:border-marquee/40 hover:shadow-[0_12px_30px_-12px_rgba(0,0,0,0.8)]"
     >
       <div className="relative aspect-[2/3] w-full overflow-hidden bg-ink-700">

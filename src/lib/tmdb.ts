@@ -8,8 +8,9 @@ import type {
   MovieDetail,
   MovieSummary,
   Paginated,
+  TrendingMedia,
 } from "./types";
-import { MOCK_GENRES, MOCK_MOVIES } from "./mock-data";
+import { MOCK_GENRES, MOCK_MOVIES, MOCK_TV, MOCK_TV_GENRES } from "./mock-data";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -130,9 +131,38 @@ interface RawCollection {
   parts?: RawMovie[];
 }
 
+interface RawTv {
+  id: number;
+  name: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  vote_average: number;
+  vote_count: number;
+  first_air_date: string | null;
+  genre_ids?: number[];
+  genres?: Genre[];
+  tagline?: string;
+  episode_run_time?: number[];
+  number_of_seasons?: number | null;
+  number_of_episodes?: number | null;
+  original_language?: string;
+  status?: string;
+  created_by?: { id: number; name: string }[];
+  credits?: { cast?: RawCast[]; crew?: RawCrew[] };
+  videos?: { results?: RawVideo[] };
+}
+
 interface RawPaginated {
   page: number;
   results: RawMovie[];
+  total_pages: number;
+  total_results: number;
+}
+
+interface RawPaginatedTv {
+  page: number;
+  results: RawTv[];
   total_pages: number;
   total_results: number;
 }
@@ -202,18 +232,55 @@ function toDetail(m: RawMovie): MovieDetail {
   };
 }
 
+function toTvSummary(t: RawTv): MovieSummary {
+  return {
+    id: t.id,
+    title: t.name,
+    overview: t.overview ?? "",
+    posterUrl: posterUrl(t.poster_path),
+    backdropUrl: backdropUrl(t.backdrop_path),
+    rating: Math.round((t.vote_average ?? 0) * 10) / 10,
+    voteCount: t.vote_count ?? 0,
+    releaseYear: t.first_air_date ? t.first_air_date.slice(0, 4) : null,
+    genreIds: t.genre_ids ?? t.genres?.map((g) => g.id) ?? [],
+  };
+}
+
+function toTvDetail(t: RawTv): MovieDetail {
+  const creators = (t.created_by ?? []).map((c) => c.name);
+  return {
+    ...toTvSummary(t),
+    tagline: t.tagline || null,
+    runtime: t.episode_run_time?.[0] ?? null,
+    genres: t.genres ?? [],
+    releaseDate: t.first_air_date || null,
+    originalLanguage: t.original_language || null,
+    status: t.status || null,
+    cast: toCast(t.credits?.cast),
+    // TV credits its "creators" rather than directors; we reuse the field.
+    directors: Array.from(new Set(creators)),
+    trailerKey: pickTrailerKey(t.videos?.results),
+    collection: null,
+    numberOfSeasons: t.number_of_seasons ?? null,
+    numberOfEpisodes: t.number_of_episodes ?? null,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Mock helpers (used when no credentials are configured)
 // ---------------------------------------------------------------------------
-
 function mockDiscover(
   genreIds: number[],
   page: number,
   sort?: SortOption,
+  year?: number,
 ): Paginated<MovieSummary> {
-  const filtered = genreIds.length
+  let filtered = genreIds.length
     ? MOCK_MOVIES.filter((m) => genreIds.every((id) => m.genreIds.includes(id)))
     : MOCK_MOVIES;
+  if (year && year > 0) {
+    filtered = filtered.filter((m) => m.releaseYear === String(year));
+  }
   const sorted = [...filtered].sort((a, b) =>
     sort === "vote_average.desc"
       ? b.rating - a.rating
@@ -238,12 +305,60 @@ function mockDiscover(
   };
 }
 
+function mockDiscoverTv(
+  genreIds: number[],
+  page: number,
+  sort?: SortOption,
+  year?: number,
+): Paginated<MovieSummary> {
+  let filtered = genreIds.length
+    ? MOCK_TV.filter((t) => genreIds.every((id) => t.genreIds.includes(id)))
+    : MOCK_TV;
+  if (year && year > 0) {
+    filtered = filtered.filter((t) => t.releaseYear === String(year));
+  }
+  const sorted = [...filtered].sort((a, b) =>
+    sort === "vote_average.desc" ? b.rating - a.rating : b.voteCount - a.voteCount,
+  );
+  return {
+    results: sorted.map(toMockSummary),
+    page: 1,
+    totalPages: 1,
+    totalResults: sorted.length,
+  };
+}
+
+function mockSearchTv(query: string, _page: number): Paginated<MovieSummary> {
+  const q = query.trim().toLowerCase();
+  const matched = MOCK_TV.filter((t) => t.title.toLowerCase().includes(q));
+  return {
+    results: matched.map(toMockSummary),
+    page: 1,
+    totalPages: 1,
+    totalResults: matched.length,
+  };
+}
+
+/** Strip a MovieDetail (as stored in mock data) down to a summary. */
+function toMockSummary(m: MovieDetail): MovieSummary {
+  return {
+    id: m.id,
+    title: m.title,
+    overview: m.overview,
+    posterUrl: m.posterUrl,
+    backdropUrl: m.backdropUrl,
+    rating: m.rating,
+    voteCount: m.voteCount,
+    releaseYear: m.releaseYear,
+    genreIds: m.genreIds,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
 export type SortOption = "popularity.desc" | "vote_average.desc" | "release_date.desc";
-
 export async function getGenres(): Promise<Genre[]> {
   if (!isLiveData) return MOCK_GENRES;
   try {
@@ -261,11 +376,13 @@ export async function discoverMovies(opts: {
   genreIds?: number[];
   page?: number;
   sort?: SortOption;
+  year?: number;
+  country?: string;
 } = {}): Promise<Paginated<MovieSummary>> {
-  const { genreIds = [], page = 1, sort = "popularity.desc" } = opts;
+  const { genreIds = [], page = 1, sort = "popularity.desc", year, country } = opts;
   const safePage = Math.min(Math.max(Math.trunc(page) || 1, 1), 500);
 
-  if (!isLiveData) return mockDiscover(genreIds, safePage, sort);
+  if (!isLiveData) return mockDiscover(genreIds, safePage, sort, year);
 
   try {
     const data = await tmdbFetch<RawPaginated>("/discover/movie", {
@@ -275,6 +392,8 @@ export async function discoverMovies(opts: {
         include_adult: "false",
         "vote_count.gte": sort === "vote_average.desc" ? 300 : 0,
         with_genres: genreIds.length ? genreIds.join(",") : undefined,
+        primary_release_year: year && year > 0 ? year : undefined,
+        with_origin_country: country || undefined,
       },
     });
 
@@ -286,7 +405,7 @@ export async function discoverMovies(opts: {
     };
   } catch {
     // Degrade gracefully rather than throwing the whole page into the error UI.
-    return mockDiscover(genreIds, safePage, sort);
+    return mockDiscover(genreIds, safePage, sort, year);
   }
 }
 
@@ -386,3 +505,260 @@ export const getCollection = cache(async function getCollection(
     return null;
   }
 });
+
+
+// ---------------------------------------------------------------------------
+// Public API — TV shows
+// ---------------------------------------------------------------------------
+
+export async function getTvGenres(): Promise<Genre[]> {
+  if (!isLiveData) return MOCK_TV_GENRES;
+  try {
+    const data = await tmdbFetch<{ genres: Genre[] }>("/genre/tv/list", {
+      revalidate: 60 * 60 * 24,
+    });
+    return data.genres;
+  } catch {
+    return MOCK_TV_GENRES;
+  }
+}
+
+export async function discoverTv(opts: {
+  genreIds?: number[];
+  page?: number;
+  sort?: SortOption;
+  year?: number;
+  country?: string;
+} = {}): Promise<Paginated<MovieSummary>> {
+  const { genreIds = [], page = 1, sort = "popularity.desc", year, country } = opts;
+  const safePage = Math.min(Math.max(Math.trunc(page) || 1, 1), 500);
+
+  if (!isLiveData) return mockDiscoverTv(genreIds, safePage, sort, year);
+
+  try {
+    const data = await tmdbFetch<RawPaginatedTv>("/discover/tv", {
+      params: {
+        page: safePage,
+        sort_by: sort,
+        include_adult: "false",
+        "vote_count.gte": sort === "vote_average.desc" ? 200 : 0,
+        with_genres: genreIds.length ? genreIds.join(",") : undefined,
+        first_air_date_year: year && year > 0 ? year : undefined,
+        with_origin_country: country || undefined,
+      },
+    });
+
+    return {
+      results: data.results.map(toTvSummary),
+      page: data.page,
+      totalPages: Math.min(data.total_pages, 500),
+      totalResults: data.total_results,
+    };
+  } catch {
+    return mockDiscoverTv(genreIds, safePage, sort, year);
+  }
+}
+
+export const getTvDetail = cache(async function getTvDetail(
+  id: number,
+): Promise<MovieDetail | null> {
+  if (!isLiveData) {
+    return MOCK_TV.find((t) => t.id === id) ?? null;
+  }
+  try {
+    const data = await tmdbFetch<RawTv>(`/tv/${id}`, {
+      params: { append_to_response: "credits,videos" },
+    });
+    return toTvDetail(data);
+  } catch {
+    return null;
+  }
+});
+
+export async function getRelatedTv(id: number): Promise<MovieSummary[]> {
+  if (!isLiveData) {
+    return mockDiscoverTv([], 1).results.filter((t) => t.id !== id).slice(0, 6);
+  }
+  try {
+    const data = await tmdbFetch<RawPaginatedTv>(`/tv/${id}/recommendations`);
+    return data.results.slice(0, 12).map(toTvSummary);
+  } catch {
+    return [];
+  }
+}
+
+export async function searchTv(opts: {
+  query: string;
+  page?: number;
+}): Promise<Paginated<MovieSummary>> {
+  const query = opts.query.trim();
+  const safePage = Math.min(Math.max(Math.trunc(opts.page ?? 1) || 1, 1), 500);
+
+  if (!query) {
+    return { results: [], page: 1, totalPages: 0, totalResults: 0 };
+  }
+  if (!isLiveData) return mockSearchTv(query, safePage);
+
+  try {
+    const data = await tmdbFetch<RawPaginatedTv>("/search/tv", {
+      params: { query, page: safePage, include_adult: "false" },
+    });
+    return {
+      results: data.results.map(toTvSummary),
+      page: data.page,
+      totalPages: Math.min(data.total_pages, 500),
+      totalResults: data.total_results,
+    };
+  } catch {
+    return mockSearchTv(query, safePage);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Public API — Trending
+// ---------------------------------------------------------------------------
+
+interface RawTrendingItem {
+  id: number;
+  title?: string;
+  name?: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  vote_average: number;
+  vote_count: number;
+  release_date?: string | null;
+  first_air_date?: string | null;
+  genre_ids?: number[];
+  media_type?: string;
+}
+
+interface RawTrendingPaginated {
+  page: number;
+  results: RawTrendingItem[];
+  total_pages: number;
+  total_results: number;
+}
+
+function toTrendingSummary(item: RawTrendingItem): TrendingMedia {
+  const isTv = item.media_type === "tv";
+  return {
+    id: item.id,
+    title: isTv ? (item.name ?? "") : (item.title ?? ""),
+    overview: item.overview ?? "",
+    posterUrl: posterUrl(item.poster_path),
+    backdropUrl: backdropUrl(item.backdrop_path),
+    rating: Math.round((item.vote_average ?? 0) * 10) / 10,
+    voteCount: item.vote_count ?? 0,
+    releaseYear: isTv
+      ? (item.first_air_date?.slice(0, 4) ?? null)
+      : (item.release_date?.slice(0, 4) ?? null),
+    genreIds: item.genre_ids ?? [],
+    media_type: item.media_type,
+  };
+}
+
+function mockTrendingMovies(_page: number): Paginated<MovieSummary> {
+  return {
+    results: MOCK_MOVIES.map(toMockSummary),
+    page: 1,
+    totalPages: 1,
+    totalResults: MOCK_MOVIES.length,
+  };
+}
+
+function mockTrendingTv(_page: number): Paginated<MovieSummary> {
+  return {
+    results: MOCK_TV.map(toMockSummary),
+    page: 1,
+    totalPages: 1,
+    totalResults: MOCK_TV.length,
+  };
+}
+
+function mockTrendingAll(_page: number): Paginated<TrendingMedia> {
+  const movies = MOCK_MOVIES.map((m) => ({ ...toMockSummary(m), media_type: "movie" }));
+  const tvShows = MOCK_TV.map((t) => ({ ...toMockSummary(t), media_type: "tv" }));
+  const combined = [...movies, ...tvShows].sort((a, b) => b.rating - a.rating);
+  return {
+    results: combined,
+    page: 1,
+    totalPages: 1,
+    totalResults: combined.length,
+  };
+}
+
+export async function getTrendingMovies(
+  timeWindow: "day" | "week" = "week",
+  opts?: { page?: number },
+): Promise<Paginated<MovieSummary>> {
+  const page = Math.min(Math.max(Math.trunc(opts?.page ?? 1) || 1, 1), 500);
+  const revalidate = timeWindow === "day" ? 15 * 60 : 60 * 60;
+
+  if (!isLiveData) return mockTrendingMovies(page);
+
+  try {
+    const data = await tmdbFetch<RawPaginated>(`/trending/movie/${timeWindow}`, {
+      params: { page },
+      revalidate,
+    });
+    return {
+      results: data.results.map(toSummary),
+      page: data.page,
+      totalPages: Math.min(data.total_pages, 500),
+      totalResults: data.total_results,
+    };
+  } catch {
+    return mockTrendingMovies(page);
+  }
+}
+
+export async function getTrendingTv(
+  timeWindow: "day" | "week" = "week",
+  opts?: { page?: number },
+): Promise<Paginated<MovieSummary>> {
+  const page = Math.min(Math.max(Math.trunc(opts?.page ?? 1) || 1, 1), 500);
+  const revalidate = timeWindow === "day" ? 15 * 60 : 60 * 60;
+
+  if (!isLiveData) return mockTrendingTv(page);
+
+  try {
+    const data = await tmdbFetch<RawPaginatedTv>(`/trending/tv/${timeWindow}`, {
+      params: { page },
+      revalidate,
+    });
+    return {
+      results: data.results.map(toTvSummary),
+      page: data.page,
+      totalPages: Math.min(data.total_pages, 500),
+      totalResults: data.total_results,
+    };
+  } catch {
+    return mockTrendingTv(page);
+  }
+}
+
+export async function getTrendingAll(
+  timeWindow: "day" | "week" = "week",
+  opts?: { page?: number },
+): Promise<Paginated<TrendingMedia>> {
+  const page = Math.min(Math.max(Math.trunc(opts?.page ?? 1) || 1, 1), 500);
+  const revalidate = timeWindow === "day" ? 15 * 60 : 60 * 60;
+
+  if (!isLiveData) return mockTrendingAll(page);
+
+  try {
+    const data = await tmdbFetch<RawTrendingPaginated>(`/trending/all/${timeWindow}`, {
+      params: { page },
+      revalidate,
+    });
+    return {
+      results: data.results.map(toTrendingSummary),
+      page: data.page,
+      totalPages: Math.min(data.total_pages, 500),
+      totalResults: data.total_results,
+    };
+  } catch {
+    return mockTrendingAll(page);
+  }
+}

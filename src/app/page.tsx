@@ -19,23 +19,38 @@ function parseQuery(value: string | string[] | undefined): string {
   return (raw ?? "").trim().slice(0, 120);
 }
 
+function parseYear(value: string | string[] | undefined): number | undefined {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const n = Number.parseInt(raw ?? "", 10);
+  return Number.isInteger(n) && n >= 1900 && n <= 2100 ? n : undefined;
+}
+
+function parseCountry(value: string | string[] | undefined): string | undefined {
+  const raw = Array.isArray(value) ? value[0] : value;
+  return raw && /^[A-Za-z]{2}$/.test(raw) ? raw.toUpperCase() : undefined;
+}
+
 export default async function HomePage({
   searchParams,
 }: {
   searchParams: {
     genres?: string | string[];
     q?: string | string[];
+    year?: string | string[];
+    country?: string | string[];
   };
 }) {
   const q = parseQuery(searchParams.q);
   const selectedIds = parseGenres(searchParams.genres);
+  const year = parseYear(searchParams.year);
+  const country = parseCountry(searchParams.country);
   const isSearching = q.length > 0;
 
   const [genres, popularInit, topRatedInit] = await Promise.all([
     getGenres(),
     isSearching
       ? searchMovies({ query: q, page: 1 })
-      : discoverMovies({ genreIds: selectedIds, page: 1 }),
+      : discoverMovies({ genreIds: selectedIds, year, country, page: 1 }),
     isSearching
       ? Promise.resolve({
           results: [],
@@ -43,7 +58,7 @@ export default async function HomePage({
           totalPages: 0,
           totalResults: 0,
         } as Paginated<MovieSummary>)
-      : discoverMovies({ genreIds: selectedIds, sort: "vote_average.desc", page: 1 }),
+      : discoverMovies({ genreIds: selectedIds, year, country, sort: "vote_average.desc", page: 1 }),
   ]);
 
   const showHero = !isSearching && popularInit.results.length > 0;
@@ -84,22 +99,26 @@ export default async function HomePage({
         <EmptyState message="Try removing a genre or two to widen your search." />
       ) : (
         <PaginatedSection
-          key={`popular-${selectedIds.join(",")}`}
-          title={selectedIds.length ? "Filtered movies" : "Popular right now"}
+          key={`popular-${selectedIds.join(",")}-${year ?? ""}-${country ?? ""}`}
+          title={selectedIds.length || year || country ? "Filtered movies" : "Popular right now"}
           sort="popularity.desc"
           initialData={popularInit}
           genreIds={selectedIds}
+          year={year}
+          country={country}
         />
       )}
 
       {!isSearching && topRatedInit.results.length > 0 && (
         <div className="mt-12">
           <PaginatedSection
-            key={`toprated-${selectedIds.join(",")}`}
+            key={`toprated-${selectedIds.join(",")}-${year ?? ""}-${country ?? ""}`}
             title="Top Rated"
             sort="vote_average.desc"
             initialData={topRatedInit}
             genreIds={selectedIds}
+            year={year}
+            country={country}
           />
         </div>
       )}

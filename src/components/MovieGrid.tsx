@@ -4,11 +4,17 @@ import { MovieCard } from "./MovieCard";
 const GRID_CLASS =
   "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6";
 
-export function MovieGrid({ movies }: { movies: MovieSummary[] }) {
+export function MovieGrid({
+  movies,
+  basePath = "/movie",
+}: {
+  movies: MovieSummary[];
+  basePath?: string;
+}) {
   return (
     <div className={GRID_CLASS}>
       {movies.map((movie, i) => (
-        <MovieCard key={movie.id} movie={movie} priority={i < 6} />
+        <MovieCard key={movie.id} movie={movie} priority={i < 6} basePath={basePath} />
       ))}
     </div>
   );

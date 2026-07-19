@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { discoverMovies } from "@/lib/tmdb";
+import { discoverTv } from "@/lib/tmdb";
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   const country = /^[A-Za-z]{2}$/.test(countryRaw) ? countryRaw.toUpperCase() : undefined;
 
   try {
-    const data = await discoverMovies({
+    const data = await discoverTv({
       page,
       sort,
       genreIds: genreIds?.length ? genreIds : undefined,
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(data);
   } catch {
     return NextResponse.json(
-      { error: "Failed to fetch movies" },
+      { error: "Failed to fetch TV shows" },
       { status: 500 },
     );
   }

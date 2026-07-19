@@ -58,6 +58,15 @@ export interface MovieDetail extends MovieSummary {
   trailerKey: string | null;
   /** Franchise this film belongs to, if any (parts fetched separately). */
   collection: CollectionSummary | null;
+  /** TV only: total number of seasons. */
+  numberOfSeasons?: number | null;
+  /** TV only: total number of episodes. */
+  numberOfEpisodes?: number | null;
+}
+
+/** Trending item from TMDB's /trending/all endpoint — includes media_type. */
+export interface TrendingMedia extends MovieSummary {
+  media_type?: string;
 }
 
 export interface Paginated<T> {
