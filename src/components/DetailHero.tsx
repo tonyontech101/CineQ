@@ -6,6 +6,7 @@ import { RatingBadge } from "./RatingBadge";
 import { TagList } from "./TagList";
 import { WatchOnButton } from "./WatchOnModal";
 import { DetailsToggleButton } from "./DetailsDisclosure";
+import { SaveButton } from "./SaveButton";
 
 export function DetailHero({ movie }: { movie: MovieDetail }) {
   const runtime = formatRuntime(movie.runtime);
@@ -79,6 +80,7 @@ export function DetailHero({ movie }: { movie: MovieDetail }) {
             <div className="mt-2 flex flex-wrap justify-center gap-3 md:justify-start">
               <WatchOnButton title={movie.title} />
               <DetailsToggleButton />
+              <SaveButton movie={movie} />
             </div>
           </div>
         </div>

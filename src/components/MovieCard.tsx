@@ -3,6 +3,7 @@ import type { MovieSummary } from "@/lib/types";
 import { truncate } from "@/lib/utils";
 import { Poster } from "./Poster";
 import { RatingBadge } from "./RatingBadge";
+import { SaveIconButton } from "./SaveButton";
 
 export function MovieCard({
   movie,
@@ -22,6 +23,9 @@ export function MovieCard({
         </div>
         <div className="absolute right-2 top-2 z-10">
           <RatingBadge rating={movie.rating} />
+        </div>
+        <div className="absolute left-2 top-2 z-10">
+          <SaveIconButton movie={movie} />
         </div>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-ink-900/90 to-transparent" />
       </div>

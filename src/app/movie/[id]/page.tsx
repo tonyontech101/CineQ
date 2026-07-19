@@ -82,19 +82,7 @@ export default async function MoviePage({
   ];
 
   return (
-    <div className="pb-8">
-      <div className="mx-auto max-w-shell px-4 pt-4 sm:px-6 lg:px-8">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-sm text-paper-muted transition-colors hover:text-paper"
-        >
-          <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2}>
-            <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          Back to browse
-        </Link>
-      </div>
-
+    <div>
       <DisclosureProvider>
         <DetailHero movie={movie} />
 

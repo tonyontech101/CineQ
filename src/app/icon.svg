@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="CineQueue">
+  <rect width="64" height="64" rx="14" fill="#0A0A0C"/>
+  <!-- C -->
+  <path d="M30 22.5 A 12 12 0 1 0 30 41.5" fill="none" stroke="#F5F6F8" stroke-width="7" stroke-linecap="round"/>
+  <!-- Q play disc -->
+  <circle cx="38" cy="32" r="12" fill="#5FC6E4"/>
+  <!-- Q tail -->
+  <path d="M45 39 L 52 47" fill="none" stroke="#5FC6E4" stroke-width="7" stroke-linecap="round"/>
+  <!-- Play triangle -->
+  <path d="M34 25.5 L 34 38.5 L 45 32 Z" fill="#0A0A0C"/>
+</svg>

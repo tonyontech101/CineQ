@@ -58,6 +58,10 @@ const config: Config = {
           from: { transform: "translateY(100%)" },
           to: { transform: "translateY(0)" },
         },
+        "slide-in-left": {
+          from: { transform: "translateX(-100%)" },
+          to: { transform: "translateX(0)" },
+        },
         "hero-in": {
           from: { opacity: "0", transform: "translateY(8px)" },
           to: { opacity: "1", transform: "translateY(0)" },
@@ -70,6 +74,7 @@ const config: Config = {
         "fade-in": "fade-in 200ms ease-out",
         "scale-in": "scale-in 180ms cubic-bezier(0.16, 1, 0.3, 1)",
         "sheet-up": "sheet-up 260ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "slide-in-left": "slide-in-left 260ms cubic-bezier(0.16, 1, 0.3, 1)",
         "hero-in": "hero-in 400ms cubic-bezier(0.16, 1, 0.3, 1)",
       },
     },
