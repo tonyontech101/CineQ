@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useScrollLock } from "@/lib/useScrollLock";
 import { NAV_ITEMS } from "./Sidebar";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -15,8 +18,15 @@ export function MobileNav() {
   const headingId = useId();
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     setOpen(false);
   }, [pathname]);
+
+  // Lock page scroll + flag the overlay so the chat launcher hides behind it.
+  useScrollLock(open);
 
   useEffect(() => {
     if (!open) return;
@@ -55,13 +65,10 @@ export function MobileNav() {
     };
 
     document.addEventListener("keydown", onKeyDown);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     const trigger = triggerRef.current;
 
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = prevOverflow;
       trigger?.focus();
     };
   }, [open]);
@@ -91,8 +98,10 @@ export function MobileNav() {
         </svg>
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 isolate" role="presentation">
+      {open &&
+        mounted &&
+        createPortal(
+          <div className="fixed inset-0 z-50 isolate" role="presentation">
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-[2px] animate-fade-in"
             onClick={close}
@@ -128,7 +137,7 @@ export function MobileNav() {
                 type="button"
                 onClick={close}
                 aria-label="Close navigation menu"
-                className="grid h-8 w-8 place-items-center rounded-lg text-paper-faint transition-colors hover:bg-ink-700 hover:text-paper"
+                className="grid h-9 w-9 place-items-center rounded-lg text-paper-faint transition-colors hover:bg-ink-700 hover:text-paper"
               >
                 <svg
                   aria-hidden
@@ -198,8 +207,9 @@ export function MobileNav() {
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
     </>
   );
 }

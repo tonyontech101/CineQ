@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import { StudioSection } from "@/components/StudioSection";
+import { getStudios } from "@/lib/tmdb";
 
 export const metadata: Metadata = {
   title: "Studios",
   description: "Browse movie studios and discover their filmographies on CineQueue.",
 };
 
-export default function StudiosPage() {
+export default async function StudiosPage() {
+  const studios = await getStudios();
+
   return (
     <div className="mx-auto max-w-shell px-3 py-5 sm:px-5 sm:py-6 lg:px-6">
       <div className="relative mb-10 overflow-hidden rounded-panel border border-ink-600/70 bg-ink-800 p-6 sm:p-10">
@@ -42,7 +45,7 @@ export default function StudiosPage() {
         </div>
       </div>
 
-      <StudioSection />
+      <StudioSection studios={studios} />
 
       <div className="mt-12 text-center">
         <p className="text-sm text-paper-faint">

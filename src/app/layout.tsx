@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Poppins, Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
@@ -34,6 +35,13 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  // The near-black brand background, applied to the browser UI on mobile.
+  themeColor: "#0A0A0C",
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -43,7 +51,9 @@ export default function RootLayout({
     <html lang="en" className={`${poppins.variable} ${inter.variable}`}>
       <body className="min-h-screen">
         <SidebarProvider>
-          <Sidebar />
+          <Suspense fallback={<aside aria-hidden className="fixed left-0 top-0 z-30 hidden h-full border-r border-ink-600/70 bg-ink-900 lg:block" style={{ width: 240 }} />}>
+            <Sidebar />
+          </Suspense>
           <ContentArea>
             <Header />
             <main className="flex-1 w-full">{children}</main>

@@ -34,7 +34,7 @@ export function SearchBar() {
   };
 
   return (
-    <form onSubmit={submit} role="search" className="w-full">
+    <form onSubmit={submit} role="search" className="w-full min-w-0 flex-1">
       <div className="group flex h-11 items-center gap-2 rounded-pill border border-ink-600 bg-ink-800/80 px-4 transition-colors focus-within:border-marquee/60">
         <svg
           aria-hidden

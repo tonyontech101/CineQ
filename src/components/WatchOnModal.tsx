@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { STREAMING_SITES } from "@/lib/streaming-sites";
 import { cn } from "@/lib/utils";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 export function WatchOnButton({
   title,
@@ -57,6 +58,9 @@ function WatchOnDialog({
   const headingId = useId();
   const descId = useId();
 
+  // Lock page scroll + flag the overlay so the chat launcher hides behind it.
+  useScrollLock(true);
+
   // Close on Escape and trap focus within the dialog.
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null;
@@ -93,12 +97,9 @@ function WatchOnDialog({
     };
 
     document.addEventListener("keydown", onKeyDown);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
 
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = prevOverflow;
       previouslyFocused?.focus();
     };
   }, [onClose]);

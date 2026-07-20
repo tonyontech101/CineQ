@@ -34,7 +34,14 @@ const YEARS = Array.from({ length: CURRENT_YEAR - 1950 + 1 }, (_, i) => CURRENT_
 
 type MediaType = "movie" | "tv";
 
-export function AdvancedSearch({ genres }: { genres: Genre[] }) {
+export function AdvancedSearch({
+  genres,
+  tvGenres,
+}: {
+  genres: Genre[];
+  /** TV genre set — TMDB uses different genre IDs for TV than for movies. */
+  tvGenres?: Genre[];
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -48,6 +55,9 @@ export function AdvancedSearch({ genres }: { genres: Genre[] }) {
   const [year, setYear] = useState("");
   const [country, setCountry] = useState("");
   const [type, setType] = useState<MediaType>("movie");
+
+  // Movies and TV use distinct TMDB genre sets — show the one matching `type`.
+  const activeGenres = type === "tv" ? (tvGenres ?? genres) : genres;
 
   // Number of filters currently active in the URL (drives the badge dot).
   const activeCount = useMemo(() => {
@@ -103,6 +113,15 @@ export function AdvancedSearch({ genres }: { genres: Genre[] }) {
       else next.add(id);
       return next;
     });
+  };
+
+  // Switching media type: keep only selections that exist in the new genre set,
+  // since movie and TV genre IDs don't overlap (e.g. TV has "Sci-Fi & Fantasy").
+  const changeType = (next: MediaType) => {
+    if (next === type) return;
+    const validIds = new Set((next === "tv" ? (tvGenres ?? genres) : genres).map((g) => g.id));
+    setSelectedGenres((prev) => new Set(Array.from(prev).filter((id) => validIds.has(id))));
+    setType(next);
   };
 
   const reset = () => {
@@ -185,7 +204,7 @@ export function AdvancedSearch({ genres }: { genres: Genre[] }) {
                   <button
                     key={t}
                     type="button"
-                    onClick={() => setType(t)}
+                    onClick={() => changeType(t)}
                     aria-pressed={type === t}
                     className={cn(
                       "rounded-pill px-3 py-1.5 text-sm font-medium transition-colors",
@@ -203,7 +222,7 @@ export function AdvancedSearch({ genres }: { genres: Genre[] }) {
             {/* Genres */}
             <Field label="Genres">
               <div className="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto">
-                {genres.map((g) => {
+                {activeGenres.map((g) => {
                   const active = selectedGenres.has(g.id);
                   return (
                     <button

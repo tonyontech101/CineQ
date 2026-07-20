@@ -416,7 +416,7 @@ export async function discoverMovies(opts: {
     };
   } catch {
     // Degrade gracefully rather than throwing the whole page into the error UI.
-    return mockDiscover(genreIds, safePage, sort, year);
+    return mockDiscover(resolved, safePage, sort, year);
   }
 }
 
@@ -568,7 +568,7 @@ export async function discoverTv(opts: {
       totalResults: data.total_results,
     };
   } catch {
-    return mockDiscoverTv(genreIds, safePage, sort, year);
+    return mockDiscoverTv(resolved, safePage, sort, year);
   }
 }
 

@@ -1,5 +1,6 @@
 import type { Paginated, MovieSummary } from "@/lib/types";
 import Link from "next/link";
+import { Suspense } from "react";
 import { discoverMovies, discoverTv, getGenres, getStudios, searchMovies } from "@/lib/tmdb";
 import { GenreFilter } from "@/components/GenreFilter";
 import { FeaturedHero } from "@/components/FeaturedHero";
@@ -85,7 +86,9 @@ export default async function HomePage({
       )}
 
       <section className="mb-8" aria-label="Genre filter">
-        <GenreFilter genres={genres} selectedIds={selectedIds} />
+        <Suspense fallback={<div className="h-9 w-full rounded-pill bg-ink-800/50" />}>
+          <GenreFilter genres={genres} selectedIds={selectedIds} />
+        </Suspense>
       </section>
 
       {isSearching ? (

@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Allow an isolated build output (used by the Playwright E2E harness) so a
+  // test build/serve doesn't clobber a `next dev` server's shared .next cache.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   images: {
     remotePatterns: [
       {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { Paginated, MovieSummary } from "@/lib/types";
+import { Suspense } from "react";
 import { discoverTv, getTvGenres } from "@/lib/tmdb";
 import { GenreFilter } from "@/components/GenreFilter";
 import { EmptyState } from "@/components/MovieGrid";
@@ -62,7 +63,9 @@ export default async function TvShowsPage({
       </section>
 
       <section className="mb-8" aria-label="Genre filter">
-        <GenreFilter genres={genres} selectedIds={selectedIds} />
+        <Suspense fallback={<div className="h-9 w-full rounded-pill bg-ink-800/50" />}>
+          <GenreFilter genres={genres} selectedIds={selectedIds} />
+        </Suspense>
       </section>
 
       {popularInit.results.length === 0 ? (

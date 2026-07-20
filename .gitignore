@@ -5,6 +5,7 @@
 
 # next.js
 /.next/
+/.next-e2e/
 /out/
 next-env.d.ts
 
@@ -39,6 +40,11 @@ Thumbs.db
 # test coverage
 /coverage
 
+# playwright
+/test-results
+/playwright-report
+/playwright/.cache
+
 # vercel
 .vercel
 
@@ -49,3 +55,4 @@ pnpm-lock.yaml
 #agent
 .opencode
 .mimocode
+.kiro

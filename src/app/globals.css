@@ -9,6 +9,10 @@
 
   html {
     scroll-behavior: smooth;
+    /* Guard against horizontal scroll from decorative/fixed elements (e.g. the
+       chat launcher's ping ring, blurred accent blobs). `clip` does not create
+       a scroll container, so `position: sticky` on the header still works. */
+    overflow-x: clip;
   }
 
   body {
@@ -65,6 +69,13 @@
     scrollbar-width: none;
   }
   .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Keep the floating chat launcher from painting over full-screen overlays
+     (watch-on sheet, mobile nav drawer, maximized chat) — especially on mobile
+     where the launcher sits in the bottom-right, right on top of the sheet. */
+  body[data-overlay-open] .chat-launcher {
     display: none;
   }
 }

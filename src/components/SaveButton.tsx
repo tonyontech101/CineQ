@@ -21,7 +21,7 @@ export function SaveIconButton({ movie }: { movie: MovieSummary }) {
       aria-label={saved ? `Remove ${movie.title} from My List` : `Add ${movie.title} to My List`}
       title={saved ? "Remove from My List" : "Add to My List"}
       className={cn(
-        "grid h-8 w-8 place-items-center rounded-pill backdrop-blur-sm ring-1 ring-white/10 transition-colors",
+        "grid h-9 w-9 place-items-center rounded-pill backdrop-blur-sm ring-1 ring-white/10 transition-colors",
         saved ? "bg-marquee text-ink-900" : "bg-ink-900/70 text-paper hover:bg-ink-900/90",
       )}
     >

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, ty
 import Link from "next/link";
 import type { ChatMessage, ChatResponse, RecommendationItem } from "@/lib/chat-types";
 import { cn, truncate } from "@/lib/utils";
+import { useScrollLock } from "@/lib/useScrollLock";
 import { Poster } from "@/components/Poster";
 import { RatingBadge } from "@/components/RatingBadge";
 
@@ -55,6 +56,9 @@ export function ChatWidget() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
+
+  // Lock the page behind the chat when it fills the screen (mobile especially).
+  useScrollLock(open && panelState === "maximized");
 
   // Focus the input when the panel opens.
   useEffect(() => {
@@ -165,7 +169,7 @@ export function ChatWidget() {
   return (
     <>
       {/* Launcher */}
-      <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3">
+      <div className="chat-launcher fixed bottom-5 right-5 z-50 flex items-center gap-3">
         {!open && (
           <span className="hidden animate-fade-in items-center gap-2 rounded-pill border border-ink-600 bg-ink-800/90 px-3.5 py-2 text-sm font-semibold text-paper shadow-lg backdrop-blur-sm sm:inline-flex">
             <span className="h-1.5 w-1.5 rounded-full bg-rating-high" />

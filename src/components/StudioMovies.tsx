@@ -95,7 +95,7 @@ export function StudioMovies({ companyId, initialData }: Props) {
                 type="button"
                 onClick={() => loadPage(page - 1, sort)}
                 disabled={!hasPrev || loading}
-                className="grid h-8 w-8 place-items-center rounded-pill border border-ink-600 text-paper-muted transition-colors hover:border-paper-faint hover:text-paper disabled:cursor-not-allowed disabled:opacity-40"
+                className="grid h-9 w-9 place-items-center rounded-pill border border-ink-600 text-paper-muted transition-colors hover:border-paper-faint hover:text-paper disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label="Previous page"
               >
                 <svg
@@ -118,7 +118,7 @@ export function StudioMovies({ companyId, initialData }: Props) {
                 type="button"
                 onClick={() => loadPage(page + 1, sort)}
                 disabled={!hasNext || loading}
-                className="grid h-8 w-8 place-items-center rounded-pill border border-ink-600 text-paper-muted transition-colors hover:border-paper-faint hover:text-paper disabled:cursor-not-allowed disabled:opacity-40"
+                className="grid h-9 w-9 place-items-center rounded-pill border border-ink-600 text-paper-muted transition-colors hover:border-paper-faint hover:text-paper disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label="Next page"
               >
                 <svg
