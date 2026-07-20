@@ -2,13 +2,14 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS } from "./Sidebar";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const headingId = useId();
@@ -146,7 +147,7 @@ export function MobileNav() {
             {/* Nav items */}
             <nav className="flex flex-col gap-0.5 px-3" aria-label="Main">
               {NAV_ITEMS.map((item) => {
-                const active = item.isActive(pathname);
+                const active = item.isActive(pathname, searchParams);
                 return (
                   <Link
                     key={item.label}

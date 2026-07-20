@@ -15,6 +15,7 @@ export const MOCK_GENRES: Genre[] = [
   { id: 9648, name: "Mystery" },
   { id: 878, name: "Science Fiction" },
   { id: 53, name: "Thriller" },
+  { id: 9999, name: "Anime" },
 ];
 
 function genresFor(ids: number[]): Genre[] {
@@ -112,6 +113,7 @@ export const MOCK_TV_GENRES: Genre[] = [
   { id: 9648, name: "Mystery" },
   { id: 10765, name: "Sci-Fi & Fantasy" },
   { id: 10768, name: "War & Politics" },
+  { id: 9999, name: "Anime" },
 ];
 
 function tvGenresFor(ids: number[]): Genre[] {

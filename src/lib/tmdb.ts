@@ -24,6 +24,14 @@ const IMAGE_BASE = "https://image.tmdb.org/t/p";
 /** True when live TMDB data is available; otherwise we serve mock data. */
 export const isLiveData = Boolean(API_KEY || ACCESS_TOKEN);
 
+import { ANIME_GENRE_ID } from "./types";
+
+const ANIMATION_GENRE_ID = 16;
+
+function resolveGenreIds(ids: number[]): number[] {
+  return ids.map((id) => (id === ANIME_GENRE_ID ? ANIMATION_GENRE_ID : id));
+}
+
 const POSTER_SIZE = "w500";
 const BACKDROP_SIZE = "w1280";
 const PROFILE_SIZE = "w185";
@@ -360,15 +368,16 @@ function toMockSummary(m: MovieDetail): MovieSummary {
 
 export type SortOption = "popularity.desc" | "vote_average.desc" | "release_date.desc";
 export async function getGenres(): Promise<Genre[]> {
-  if (!isLiveData) return MOCK_GENRES;
+  const animeGenre: Genre = { id: ANIME_GENRE_ID, name: "Anime" };
+  if (!isLiveData) return [...MOCK_GENRES];
   try {
     const data = await tmdbFetch<{ genres: Genre[] }>("/genre/movie/list", {
       revalidate: 60 * 60 * 24,
     });
-    return data.genres;
+    return [...data.genres, animeGenre];
   } catch {
     // A transient TMDB failure shouldn't blank the UI — fall back to a known set.
-    return MOCK_GENRES;
+    return [...MOCK_GENRES];
   }
 }
 
@@ -380,9 +389,10 @@ export async function discoverMovies(opts: {
   country?: string;
 } = {}): Promise<Paginated<MovieSummary>> {
   const { genreIds = [], page = 1, sort = "popularity.desc", year, country } = opts;
+  const resolved = resolveGenreIds(genreIds);
   const safePage = Math.min(Math.max(Math.trunc(page) || 1, 1), 500);
 
-  if (!isLiveData) return mockDiscover(genreIds, safePage, sort, year);
+  if (!isLiveData) return mockDiscover(resolved, safePage, sort, year);
 
   try {
     const data = await tmdbFetch<RawPaginated>("/discover/movie", {
@@ -391,7 +401,7 @@ export async function discoverMovies(opts: {
         sort_by: sort,
         include_adult: "false",
         "vote_count.gte": sort === "vote_average.desc" ? 300 : 0,
-        with_genres: genreIds.length ? genreIds.join(",") : undefined,
+        with_genres: resolved.length ? resolved.join(",") : undefined,
         primary_release_year: year && year > 0 ? year : undefined,
         with_origin_country: country || undefined,
       },
@@ -512,14 +522,15 @@ export const getCollection = cache(async function getCollection(
 // ---------------------------------------------------------------------------
 
 export async function getTvGenres(): Promise<Genre[]> {
-  if (!isLiveData) return MOCK_TV_GENRES;
+  const animeGenre: Genre = { id: ANIME_GENRE_ID, name: "Anime" };
+  if (!isLiveData) return [...MOCK_TV_GENRES];
   try {
     const data = await tmdbFetch<{ genres: Genre[] }>("/genre/tv/list", {
       revalidate: 60 * 60 * 24,
     });
-    return data.genres;
+    return [...data.genres, animeGenre];
   } catch {
-    return MOCK_TV_GENRES;
+    return [...MOCK_TV_GENRES];
   }
 }
 
@@ -531,9 +542,10 @@ export async function discoverTv(opts: {
   country?: string;
 } = {}): Promise<Paginated<MovieSummary>> {
   const { genreIds = [], page = 1, sort = "popularity.desc", year, country } = opts;
+  const resolved = resolveGenreIds(genreIds);
   const safePage = Math.min(Math.max(Math.trunc(page) || 1, 1), 500);
 
-  if (!isLiveData) return mockDiscoverTv(genreIds, safePage, sort, year);
+  if (!isLiveData) return mockDiscoverTv(resolved, safePage, sort, year);
 
   try {
     const data = await tmdbFetch<RawPaginatedTv>("/discover/tv", {
@@ -542,7 +554,7 @@ export async function discoverTv(opts: {
         sort_by: sort,
         include_adult: "false",
         "vote_count.gte": sort === "vote_average.desc" ? 200 : 0,
-        with_genres: genreIds.length ? genreIds.join(",") : undefined,
+        with_genres: resolved.length ? resolved.join(",") : undefined,
         first_air_date_year: year && year > 0 ? year : undefined,
         with_origin_country: country || undefined,
       },

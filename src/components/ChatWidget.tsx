@@ -54,6 +54,13 @@ export function ChatWidget() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  // Allow other components (e.g. the "Ask Reel" banner) to open the widget.
+  useEffect(() => {
+    const onOpen = () => setOpen(true);
+    window.addEventListener("cinequeue:open-chat", onOpen);
+    return () => window.removeEventListener("cinequeue:open-chat", onOpen);
+  }, []);
+
   const send = async (text: string) => {
     const content = text.trim();
     if (!content || loading) return;

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   createContext,
   useContext,
@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { cn } from "@/lib/utils";
+import { ANIME_GENRE_ID } from "@/lib/types";
 import { AppLogo } from "@/components/logo-variants";
 
 const STORAGE_KEY = "cinequeue-sidebar-collapsed";
@@ -148,11 +149,31 @@ function IconBookmark() {
   );
 }
 
+function IconAnime() {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 24 24"
+      className="h-5 w-5 shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="9" cy="10" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="10" r="1.5" fill="currentColor" stroke="none" />
+      <path d="M8 16c.5-1 1.5-2 4-2s3.5 1 4 2" />
+    </svg>
+  );
+}
+
 export interface NavItem {
   label: string;
   href: string;
   icon: ReactNode;
-  isActive: (pathname: string) => boolean;
+  isActive: (pathname: string, searchParams: URLSearchParams) => boolean;
 }
 
 export const NAV_ITEMS: NavItem[] = [
@@ -181,6 +202,12 @@ export const NAV_ITEMS: NavItem[] = [
     isActive: (p) => p.startsWith("/tv"),
   },
   {
+    label: "Anime",
+    href: `/movies?genres=${ANIME_GENRE_ID}`,
+    icon: <IconAnime />,
+    isActive: (p, sp) => p === "/movies" && sp.get("genres") === String(ANIME_GENRE_ID),
+  },
+  {
     label: "My List",
     href: "/my-list",
     icon: <IconBookmark />,
@@ -191,6 +218,7 @@ export const NAV_ITEMS: NavItem[] = [
 export function Sidebar() {
   const { collapsed, toggle } = useSidebar();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   return (
     <aside
@@ -230,7 +258,7 @@ export function Sidebar() {
       {/* Nav list */}
       <nav className="flex flex-col gap-1 px-2" aria-label="Primary">
         {NAV_ITEMS.map((item) => {
-          const active = item.isActive(pathname);
+          const active = item.isActive(pathname, searchParams);
           return (
             <Link
               key={item.label}

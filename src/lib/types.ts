@@ -64,6 +64,9 @@ export interface MovieDetail extends MovieSummary {
   numberOfEpisodes?: number | null;
 }
 
+/** Pseudo-genre ID for "Anime" — maps to Animation (ID 16) in queries. */
+export const ANIME_GENRE_ID = 9999;
+
 /** Trending item from TMDB's /trending/all endpoint — includes media_type. */
 export interface TrendingMedia extends MovieSummary {
   media_type?: string;

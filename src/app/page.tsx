@@ -1,9 +1,11 @@
 import type { Paginated, MovieSummary } from "@/lib/types";
-import { discoverMovies, getGenres, searchMovies } from "@/lib/tmdb";
+import Link from "next/link";
+import { discoverMovies, discoverTv, getGenres, searchMovies } from "@/lib/tmdb";
 import { GenreFilter } from "@/components/GenreFilter";
 import { FeaturedHero } from "@/components/FeaturedHero";
 import { MovieGrid, EmptyState } from "@/components/MovieGrid";
 import { PaginatedSection } from "@/components/PaginatedSection";
+import { AskReelBanner } from "@/components/AskReelBanner";
 
 function parseGenres(value: string | string[] | undefined): number[] {
   if (!value) return [];
@@ -46,7 +48,7 @@ export default async function HomePage({
   const country = parseCountry(searchParams.country);
   const isSearching = q.length > 0;
 
-  const [genres, popularInit, topRatedInit] = await Promise.all([
+  const [genres, popularInit, topRatedInit, popularTv] = await Promise.all([
     getGenres(),
     isSearching
       ? searchMovies({ query: q, page: 1 })
@@ -59,6 +61,14 @@ export default async function HomePage({
           totalResults: 0,
         } as Paginated<MovieSummary>)
       : discoverMovies({ genreIds: selectedIds, year, country, sort: "vote_average.desc", page: 1 }),
+    isSearching
+      ? Promise.resolve({
+          results: [],
+          page: 1,
+          totalPages: 0,
+          totalResults: 0,
+        } as Paginated<MovieSummary>)
+      : discoverTv({ page: 1 }),
   ]);
 
   const showHero = !isSearching && popularInit.results.length > 0;
@@ -120,6 +130,34 @@ export default async function HomePage({
             year={year}
             country={country}
           />
+        </div>
+      )}
+
+      {!isSearching && popularTv.results.length > 0 && (
+        <section className="mt-12" aria-label="Popular on TV">
+          <div className="mb-5 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="font-display text-xl font-extrabold tracking-tight text-paper sm:text-2xl">
+                Popular on TV right now
+              </h2>
+              <p className="mt-1 text-sm text-paper-muted">
+                Series worth binging — straight from our TV catalog.
+              </p>
+            </div>
+            <Link
+              href="/tv"
+              className="shrink-0 whitespace-nowrap rounded-pill border border-ink-600 px-4 py-2 text-sm font-semibold text-paper-muted transition-colors hover:border-marquee/50 hover:text-marquee"
+            >
+              View all
+            </Link>
+          </div>
+          <MovieGrid movies={popularTv.results.slice(0, 12)} basePath="/tv" />
+        </section>
+      )}
+
+      {!isSearching && (
+        <div className="mt-14">
+          <AskReelBanner />
         </div>
       )}
     </div>
