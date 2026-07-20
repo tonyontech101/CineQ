@@ -1,4 +1,4 @@
-import type { CastMember, Genre, MovieDetail } from "./types";
+import type { CastMember, Genre, MovieDetail, Studio } from "./types";
 // Bundled fallback data so the app runs with zero configuration (no TMDB key).
 // Posters are intentionally null here; the UI renders an on-brand placeholder.
 // Real deployments set TMDB_API_KEY and get live posters + a full catalog.
@@ -173,3 +173,104 @@ export const MOCK_TV: MovieDetail[] = RAW_TV.map((r) => ({
   numberOfSeasons: r.seasons,
   numberOfEpisodes: r.episodes,
 }));
+
+// ---------------------------------------------------------------------------
+// Studios (demo fallback)
+// ---------------------------------------------------------------------------
+
+export const MOCK_STUDIOS: Studio[] = [
+  {
+    id: 1,
+    name: "Dreamscape Pictures",
+    tmdbCompanyId: 1,
+    description: "Known for visually stunning science fiction and ambitious world-building epics.",
+    logoPath: null,
+    originCountry: "US",
+  },
+  {
+    id: 2,
+    name: "Iron Gate Films",
+    tmdbCompanyId: 2,
+    description: "Gritty dramas and character-driven thrillers with a reputation for bold storytelling.",
+    logoPath: null,
+    originCountry: "US",
+  },
+  {
+    id: 3,
+    name: "Sakura Studio",
+    tmdbCompanyId: 3,
+    description: "Award-winning animation house blending traditional artistry with cutting-edge technology.",
+    logoPath: null,
+    originCountry: "JP",
+  },
+  {
+    id: 4,
+    name: "Nordic Light Productions",
+    tmdbCompanyId: 4,
+    description: "Atmospheric Scandinavian cinema — slow-burn thrillers and haunting dramas.",
+    logoPath: null,
+    originCountry: "SE",
+  },
+  {
+    id: 5,
+    name: "Summit Ridge Entertainment",
+    tmdbCompanyId: 5,
+    description: "High-concept action and adventure films with global appeal.",
+    logoPath: null,
+    originCountry: "US",
+  },
+  {
+    id: 6,
+    name: "Vanguard Pictures",
+    tmdbCompanyId: 6,
+    description: "Independent cinema with a focus on social realism and emerging voices.",
+    logoPath: null,
+    originCountry: "GB",
+  },
+  {
+    id: 7,
+    name: "Golden Era Studios",
+    tmdbCompanyId: 7,
+    description: "Classic Hollywood glamour meets modern blockbuster spectacle.",
+    logoPath: null,
+    originCountry: "US",
+  },
+  {
+    id: 8,
+    name: "Midnight Sun Films",
+    tmdbCompanyId: 8,
+    description: "Arthouse and experimental cinema pushing the boundaries of visual storytelling.",
+    logoPath: null,
+    originCountry: "NO",
+  },
+  {
+    id: 9,
+    name: "Atlas Global Media",
+    tmdbCompanyId: 9,
+    description: "International co-productions bridging Eastern and Western filmmaking traditions.",
+    logoPath: null,
+    originCountry: "FR",
+  },
+  {
+    id: 10,
+    name: "Redwood Creek Productions",
+    tmdbCompanyId: 10,
+    description: "Nature documentaries and eco-themed feature films.",
+    logoPath: null,
+    originCountry: "CA",
+  },
+];
+
+/** Map studio IDs to movie IDs for mock associations. */
+export const STUDIO_MOVIE_MAP: Record<number, number[]> = {
+  1: [1, 5, 6, 12],
+  2: [2, 7, 10, 11],
+  3: [8],
+  4: [2, 9],
+  5: [4, 6],
+  6: [3, 11],
+  7: [1, 10, 12],
+  8: [3, 9],
+  9: [5, 6],
+  10: [2, 8],
+};

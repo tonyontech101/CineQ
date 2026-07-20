@@ -19,6 +19,20 @@ export interface CollectionSummary {
   name: string;
 }
 
+/** A movie production studio / company. */
+export interface Studio {
+  /** Internal ID (mirrors the TMDB company ID for real data). */
+  id: number;
+  name: string;
+  /** TMDB production company ID, used for discover queries and routing. */
+  tmdbCompanyId: number;
+  description: string;
+  /** TMDB logo path (e.g. "/abc.png"), or null when unavailable. */
+  logoPath: string | null;
+  /** ISO 3166-1 country code, e.g. "US". */
+  originCountry: string | null;
+}
+
 /** A movie franchise/collection with its member films. */
 export interface Collection extends CollectionSummary {
   parts: MovieSummary[];

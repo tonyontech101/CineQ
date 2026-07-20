@@ -8,9 +8,10 @@ import type {
   MovieDetail,
   MovieSummary,
   Paginated,
+  Studio,
   TrendingMedia,
 } from "./types";
-import { MOCK_GENRES, MOCK_MOVIES, MOCK_TV, MOCK_TV_GENRES } from "./mock-data";
+import { MOCK_GENRES, MOCK_MOVIES, MOCK_STUDIOS, MOCK_TV, MOCK_TV_GENRES, STUDIO_MOVIE_MAP } from "./mock-data";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -772,5 +773,169 @@ export async function getTrendingAll(
     };
   } catch {
     return mockTrendingAll(page);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Public API — Studios
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns all available studios. In live mode, this uses the TMDB
+ * production_companies endpoint; in mock mode, it returns curated data.
+ */
+export async function getStudios(): Promise<Studio[]> {
+  if (!isLiveData) return MOCK_STUDIOS;
+
+  try {
+    // TMDB doesn't have a great "browse all companies" endpoint, so we
+    // maintain a curated list of well-known production company IDs.
+    // These map to instantly recognizable studios with strong brand logos.
+    const COMPANY_IDS = [
+      420, // Marvel Studios
+      3, // Pixar
+      2, // Walt Disney Pictures
+      174, // Warner Bros. Pictures
+      33, // Universal Pictures
+      521, // DreamWorks Animation
+      4, // Paramount
+      5, // Columbia Pictures
+      25, // 20th Century Studios
+      923, // Legendary Pictures
+    ];
+    const companies = await Promise.all(
+      COMPANY_IDS.map((id) =>
+        tmdbFetch<RawCompany>(`/company/${id}`, { revalidate: 60 * 60 * 24 }),
+      ),
+    );
+    return companies.map((c) => ({
+      id: c.id,
+      name: c.name,
+      tmdbCompanyId: c.id,
+      description: c.description || `${c.name} — a leading production company.`,
+      logoPath: c.logo_path ?? null,
+      originCountry: c.origin_country || null,
+    }));
+  } catch {
+    return MOCK_STUDIOS;
+  }
+}
+
+interface RawCompany {
+  id: number;
+  name: string;
+  description?: string;
+  logo_path?: string | null;
+  origin_country?: string;
+}
+
+/**
+ * Get a single studio by its internal ID.
+ */
+export const getStudioById = cache(async function getStudioById(
+  id: number,
+): Promise<Studio | null> {
+  if (!isLiveData) return MOCK_STUDIOS.find((s) => s.id === id) ?? null;
+
+  try {
+    const data = await tmdbFetch<RawCompany>(`/company/${id}`);
+    return {
+      id: data.id,
+      name: data.name,
+      tmdbCompanyId: data.id,
+      description: data.description || `${data.name} — a leading production company.`,
+      logoPath: data.logo_path ?? null,
+      originCountry: data.origin_country || null,
+    };
+  } catch {
+    return null;
+  }
+});
+
+/**
+ * Get a studio by its TMDB production company ID.
+ */
+export const getStudioByCompanyId = cache(async function getStudioByCompanyId(
+  companyId: number,
+): Promise<Studio | null> {
+  if (!isLiveData) return MOCK_STUDIOS.find((s) => s.tmdbCompanyId === companyId) ?? null;
+
+  try {
+    const data = await tmdbFetch<RawCompany>(`/company/${companyId}`);
+    return {
+      id: data.id,
+      name: data.name,
+      tmdbCompanyId: data.id,
+      description: data.description || `${data.name} — a leading production company.`,
+      logoPath: data.logo_path ?? null,
+      originCountry: data.origin_country || null,
+    };
+  } catch {
+    return null;
+  }
+});
+
+/** Company logo URL helper. */
+export function studioLogoUrl(path: string | null, size = "w200"): string | null {
+  return path ? `${IMAGE_BASE}/${size}${path}` : null;
+}
+
+function mockMoviesByStudio(studioId: number, page: number): Paginated<MovieSummary> {
+  const movieIds = STUDIO_MOVIE_MAP[studioId] ?? [];
+  const movies = MOCK_MOVIES.filter((m) => movieIds.includes(m.id));
+  return {
+    results: movies.map((m) => ({
+      id: m.id,
+      title: m.title,
+      overview: m.overview,
+      posterUrl: m.posterUrl,
+      backdropUrl: m.backdropUrl,
+      rating: m.rating,
+      voteCount: m.voteCount,
+      releaseYear: m.releaseYear,
+      genreIds: m.genreIds,
+    })),
+    page: 1,
+    totalPages: 1,
+    totalResults: movies.length,
+  };
+}
+
+/**
+ * Discover movies produced by a given studio.
+ * Uses TMDB's discover endpoint with `with_companies` filter.
+ */
+export async function discoverMoviesByStudio(opts: {
+  companyId: number;
+  page?: number;
+  sort?: SortOption;
+}): Promise<Paginated<MovieSummary>> {
+  const { companyId, page: rawPage = 1, sort = "popularity.desc" } = opts;
+  const page = Math.min(Math.max(Math.trunc(rawPage) || 1, 1), 500);
+
+  if (!isLiveData) {
+    // Find the studio's internal ID from the TMDB company ID
+    const studio = MOCK_STUDIOS.find((s) => s.tmdbCompanyId === companyId);
+    return mockMoviesByStudio(studio?.id ?? companyId, page);
+  }
+
+  try {
+    const data = await tmdbFetch<RawPaginated>("/discover/movie", {
+      params: {
+        page,
+        sort_by: sort,
+        include_adult: "false",
+        with_companies: String(companyId),
+      },
+    });
+    return {
+      results: data.results.map(toSummary),
+      page: data.page,
+      totalPages: Math.min(data.total_pages, 500),
+      totalResults: data.total_results,
+    };
+  } catch {
+    const studio = MOCK_STUDIOS.find((s) => s.tmdbCompanyId === companyId);
+    return mockMoviesByStudio(studio?.id ?? companyId, page);
   }
 }

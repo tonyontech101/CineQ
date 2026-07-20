@@ -1,11 +1,12 @@
 import type { Paginated, MovieSummary } from "@/lib/types";
 import Link from "next/link";
-import { discoverMovies, discoverTv, getGenres, searchMovies } from "@/lib/tmdb";
+import { discoverMovies, discoverTv, getGenres, getStudios, searchMovies } from "@/lib/tmdb";
 import { GenreFilter } from "@/components/GenreFilter";
 import { FeaturedHero } from "@/components/FeaturedHero";
 import { MovieGrid, EmptyState } from "@/components/MovieGrid";
 import { PaginatedSection } from "@/components/PaginatedSection";
 import { AskReelBanner } from "@/components/AskReelBanner";
+import { StudioSection } from "@/components/StudioSection";
 
 function parseGenres(value: string | string[] | undefined): number[] {
   if (!value) return [];
@@ -48,7 +49,7 @@ export default async function HomePage({
   const country = parseCountry(searchParams.country);
   const isSearching = q.length > 0;
 
-  const [genres, popularInit, topRatedInit, popularTv] = await Promise.all([
+  const [genres, popularInit, topRatedInit, popularTv, studios] = await Promise.all([
     getGenres(),
     isSearching
       ? searchMovies({ query: q, page: 1 })
@@ -69,6 +70,7 @@ export default async function HomePage({
           totalResults: 0,
         } as Paginated<MovieSummary>)
       : discoverTv({ page: 1 }),
+    isSearching ? Promise.resolve([]) : getStudios(),
   ]);
 
   const showHero = !isSearching && popularInit.results.length > 0;
@@ -159,6 +161,12 @@ export default async function HomePage({
         <div className="mt-14">
           <AskReelBanner />
         </div>
+      )}
+
+      {!isSearching && studios.length > 0 && (
+        <section className="mt-14" aria-label="Browse by studio">
+          <StudioSection studios={studios} />
+        </section>
       )}
     </div>
   );
