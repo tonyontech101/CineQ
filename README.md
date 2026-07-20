@@ -41,6 +41,18 @@ it still runs and is fully navigable — you'll see a "Demo data" badge in the h
 | `npm run build` | Production build                |
 | `npm start`     | Serve the production build      |
 | `npm run lint`  | Lint with ESLint                |
+| `npm test`      | Run unit tests (Vitest)         |
+| `npm run test:e2e` | Run mobile E2E tests (Playwright) |
+
+> **First E2E run:** install the browser once with `npx playwright install chromium`.
+> The E2E suite builds and serves the app on port 3100 in mock mode, so it won't
+> collide with a `next dev` server on :3000.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs lint, unit tests, and the production build on every
+push and pull request to `main`. Vercel handles the actual build and deployment; the
+Playwright mobile E2E suite is run locally (`npm run test:e2e`).
 
 ## Architecture
 

@@ -1,0 +1,50 @@
+name: CI
+
+# Minimal safety net for a solo project with real users: run the fast checks
+# on every push to main and on pull requests. Vercel handles the actual
+# build + deploy; this catches unit-test and type/lint regressions before they
+# ship. The slower Playwright mobile E2E suite is intentionally left to run
+# locally (`npm run test:e2e`) to keep CI fast and simple.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same branch to save minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, test, build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          # Keep the build deterministic and offline — no real TMDB calls.
+          # Mock data is used when these are empty (see lib/tmdb.ts).
+          TMDB_API_KEY: ""
+          TMDB_ACCESS_TOKEN: ""

@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   description:
     "Browse and filter movies by genre, dig into details, and jump to the streaming site of your choice.",
-  metadataBase: new URL("https://cinequeue.example"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   openGraph: {
     title: "CineQueue",
     description: "Discover your next film.",
