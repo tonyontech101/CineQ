@@ -8,6 +8,8 @@ A movie discovery website built with **Next.js 14 (App Router)**, **TypeScript**
 - Filter by one or more genres via a horizontal scrolling strip (state lives in the URL, so filters are shareable)
 - Movie detail page with backdrop, poster, tags, description, rating, and runtime
 - **Watch on…** button that opens a chooser of external streaming sites in a new tab
+- **Reel**, an AI chat guide that recommends titles and answers questions about a
+  specific movie or show — grounded in real TMDB data (cast, synopsis, ratings)
 
 ## Getting started
 
@@ -32,6 +34,31 @@ TMDB_API_KEY=your_v3_api_key
 
 **No key?** The app automatically falls back to a small bundled sample catalog so
 it still runs and is fully navigable — you'll see a "Demo data" badge in the header.
+
+### Reel — the AI chat guide (optional)
+
+**Reel** is the in-app chat assistant. It does two things:
+
+- **Recommends** movies and TV shows from a mood, genre, actor, or a title you like.
+- **Answers questions about a specific title** (plot, cast, creators, year, why it's
+  notable). These answers are **grounded in real TMDB data** — Reel identifies the
+  title, fetches its actual synopsis, cast, rating, and runtime/seasons, and answers
+  from those verified facts rather than guessing.
+
+Reel is powered by Google Gemini. Add a key to `.env.local` to enable it:
+
+```
+GEMINI_API=your_gemini_api_key
+# optional — override the model (defaults to gemini-2.5-flash):
+# GEMINI_MODEL=gemini-2.5-flash
+```
+
+**No key?** Reel still works but degrades gracefully to a **rule-based fallback**
+that searches the catalog directly instead of generating AI recommendations.
+
+> On Vercel, set `GEMINI_API` under **Project → Settings → Environment Variables**
+> and redeploy for it to take effect. Grounded detail answers make two sequential
+> model calls, so the chat route sets `maxDuration = 45`.
 
 ## Scripts
 
@@ -65,12 +92,17 @@ src/
     error.tsx             Client error boundary
     not-found.tsx         404
     movie/[id]/page.tsx   Detail page + related titles + OG metadata
+    api/chat/route.ts     Reel chat endpoint (rate-limited, maxDuration=45)
     globals.css           Tailwind layers + base theme
   components/             Presentational + interactive UI
     Header, SearchBar, Footer, MovieCard, MovieGrid, GenreFilter,
-    FeaturedHero, RatingBadge, Poster, DetailHero, TagList, WatchOnModal
+    FeaturedHero, RatingBadge, Poster, DetailHero, TagList, WatchOnModal,
+    ChatWidget            Reel chat UI (recommendation cards + answers)
   lib/
     tmdb.ts               server-only TMDB client (+ mock fallback, caching)
+    gemini.ts             server-only Gemini client (recommend + grounded answer)
+    recommend.ts          Orchestrates Reel: title resolution + TMDB grounding
+    chat-types.ts         Shared chat message / response types (client + server)
     streaming-sites.ts    Config-driven external site list + URL builders
     mock-data.ts          Bundled fallback catalog
     types.ts              Normalized domain types
