@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import type { ChatMessage } from "@/lib/chat-types";
 import { recommendFromConversation } from "@/lib/recommend";
 
+// Grounded detail answers may make two sequential model calls (identify the
+// title, then answer from its facts), so allow more than the platform default.
+// Requires a Vercel plan that permits this ceiling; ignored elsewhere.
+export const maxDuration = 45;
+
 // Keep the payload small and bounded.
 const MAX_MESSAGES = 20;
 const MAX_CONTENT_LENGTH = 1000;
